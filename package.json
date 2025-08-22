@@ -1,0 +1,28 @@
+{
+  "name": "devtinder-backend",
+  "version": "1.0.0",
+  "description": "Tinder like application for devlopers ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KaranMeghe/devTinder-backend.git"
+  },
+  "keywords": [
+    "nodeJs",
+    "javascript"
+  ],
+  "author": "karan meghe",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/KaranMeghe/devTinder-backend/issues"
+  },
+  "homepage": "https://github.com/KaranMeghe/devTinder-backend#readme",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
