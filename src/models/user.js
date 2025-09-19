@@ -27,7 +27,8 @@ const userSchema = new mongoose.Schema({
         required: true,
         trim: true,
         minLength: 8,
-        maxLength: 16
+        maxLength: 16,
+        select: false
     },
     photoUrl: {
         type: String,
@@ -60,5 +61,15 @@ const userSchema = new mongoose.Schema({
         type: [String]
     }
 }, { timestamps: true });
+
+
+
+// Transform before sending data to client 
+userSchema.set('toJSON', {
+    transform: (doc, ret) => {
+        delete ret.password;
+        return ret;
+    }
+});
 
 module.exports = mongoose.model("User", userSchema);

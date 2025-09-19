@@ -7,28 +7,44 @@ app.use(express.json());
 
 // Create new user
 app.post('/signup', async (req, res) => {
-    // creating new istance of the User Model (class)
     try {
+        // creating new istance of the User Model (class)
         const user = new User(req.body);
         console.log("Req Body", req.body);
+        // save user in DB
         await user.save();
-        res.status(201).send("User Created Successfully");
+
+        // proper structured response 
+        res.status(201).json({
+            success: true,
+            message: "User Created Successfully",
+            data: user
+        });
 
     } catch (err) {
         console.error("Signup Error:", err);
 
         // Duplicate Email Error (MongoDB Code)
         if (err.code === 11000) {
-            res.status(409).send("User with this email already exist");
+            res.status(409).json({
+                success: false,
+                message: "User with this email already exist"
+            });
         }
 
         // Validation error
         if (err.name === "ValidationError") {
-            res.status(400).send(err.message);
+            res.status(400).json({
+                success: false,
+                message: err.message
+            });
         }
 
         // Fallback for unknown errors
-        res.status(500).send("Something went wrong on the server");
+        res.status(500).json({
+            success: false,
+            message: "Something went wrong on the server"
+        });
 
     }
 });
@@ -36,30 +52,59 @@ app.post('/signup', async (req, res) => {
 // Feed API - GET/feed - get all users from database
 app.get('/feed', async (req, res) => {
     try {
-        const users = await User.find({}).select("-password"); // exclude password
-        if (users.length === 0) {
-            res.status(404).send(`No users found`);
-        } else {
-            res.json(users);
-        }
+        const users = await User.find({});
+
+        res.status(200).json({
+            success: true,
+            message: users.length > 0 ? "Users fetched successfully" : "No users found",
+            data: users
+        });
+
     } catch (err) {
-        res.status(500).send(`Somthing went wrong: ${err.message}`);
+        console.error("Feed Error:", err);
+        res.status(500).json({
+            success: false,
+            message: `Somthing went wrong on the server: ${err.message}`
+        });
     }
 });
 
 // Get user from email
 app.get('/user', async (req, res) => {
-    const userEmail = req.body.emailId;
-    const user = await User.find({ emailId: userEmail }).select("-password");;
 
     try {
-        if (user.length === 0) {
-            res.status(404).send(`User not found`);
-        } else {
-            res.json(user);
+        //check if email is provided or not
+        const { emailId } = req.body;
+        if (!emailId) {
+            return res.status(400).json({
+                success: false,
+                message: "Email is required"
+            });
         }
+
+        // what if user not found
+        const user = await User.findOne({ emailId });
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        // send response 
+        res.status(200).json({
+            success: true,
+            message: "User fetched successfully",
+            data: user
+        });
+
+
     } catch (err) {
-        res.status(400).send(`Something went wrong: ${err.message}`);
+        console.error("Get User Error:", err);
+        res.status(500).json({
+            success: false,
+            message: `Something went wrong on the server: ${err.message}`
+        });
     }
 });
 
@@ -72,29 +117,62 @@ app.delete("/user", async (req, res) => {
         const user = await User.findByIdAndDelete(_id);
 
         if (!user) {
-            return res.status(404).send("User not found");
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
         } else {
-            res.send(`User Deleted Successfully: ${user.firstName} ${user.lastName}`);
+            res.status(200).json({
+                success: true,
+                message: `User Deleted Successfully: ${user.firstName} ${user.lastName}`,
+                data: null
+            });
         }
     } catch (err) {
-        res.status(400).send(`Something went wrong: ${err.message}`);
+        console.error("Delete User Error:", err);
+        res.status(500).json({
+            success: false,
+            message: `Something went wrong on the server: ${err.message}`
+        });
     }
 });
 
 // Update user by id
 app.patch('/user', async (req, res) => {
-    const { _id } = req.body;
-    const updatedData = req.body;
+    const { _id, ...updatedData } = req.body;
+
+    if (!_id) {
+        return res.status(400).json({
+            success: false,
+            message: "User ID (_id) is required"
+        });
+    }
 
     try {
-        const user = await User.findOneAndUpdate({ _id }, updatedData, { returnDocument: "after", runValidators: true });
+        const user = await User.findOneAndUpdate(
+            { _id },
+            updatedData,
+            { returnDocument: "after", runValidators: true }
+        );
+
         if (!user) {
-            return res.status(404).send("User not found");
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
         } else {
-            return res.send(`User updated successfully`, user);
+            res.status(200).json({
+                success: true,
+                message: "User updated successfully",
+                data: user
+            });
         }
     } catch (err) {
-        res.status(400).send(`Something went wrong: ${err.message}`);
+        console.error("Update User Error:", err);
+        res.status(500).json({
+            success: false,
+            message: `Something went wrong on the server: ${err.message}`
+        });
     }
 });
 
