@@ -2,11 +2,12 @@ const express = require('express');
 const app = express();
 const connectDb = require('./config/database');
 const User = require('./models/user');
-
 app.use(express.json());
 
+const sanitizeUserInput = require('./middlewares/sanitize');
+
 // Create new user
-app.post('/signup', async (req, res) => {
+app.post('/signup', sanitizeUserInput, async (req, res) => {
     try {
         // creating new istance of the User Model (class)
         const user = new User(req.body);
@@ -15,7 +16,7 @@ app.post('/signup', async (req, res) => {
         await user.save();
 
         // proper structured response 
-        res.status(201).json({
+        return res.status(201).json({
             success: true,
             message: "User Created Successfully",
             data: user
