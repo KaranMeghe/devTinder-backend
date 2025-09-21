@@ -24,6 +24,7 @@
   "homepage": "https://github.com/KaranMeghe/devTinder-backend#readme",
   "dependencies": {
     "express": "^5.1.0",
-    "mongoose": "^8.18.0"
+    "mongoose": "^8.18.0",
+    "validator": "^13.15.15"
   }
 }
