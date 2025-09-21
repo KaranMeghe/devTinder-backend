@@ -5,6 +5,7 @@ const User = require('./models/user');
 app.use(express.json());
 
 const sanitizeUserInput = require('./middlewares/sanitize');
+const sanitizeUpdateInput = require('./middlewares/sanitizeUpdateInput');
 
 // Create new user
 app.post('/signup', sanitizeUserInput, async (req, res) => {
@@ -139,10 +140,11 @@ app.delete("/user", async (req, res) => {
 });
 
 // Update user by id
-app.patch('/user', async (req, res) => {
-    const { _id, ...updatedData } = req.body;
+app.patch('/user/:userId', sanitizeUpdateInput, async (req, res) => {
+    const updatedData = req.body;
+    const userId = req.params?.userId;
 
-    if (!_id) {
+    if (!userId) {
         return res.status(400).json({
             success: false,
             message: "User ID (_id) is required"
@@ -151,7 +153,7 @@ app.patch('/user', async (req, res) => {
 
     try {
         const user = await User.findOneAndUpdate(
-            { _id },
+            { _id: userId },
             updatedData,
             { returnDocument: "after", runValidators: true }
         );
