@@ -4,15 +4,22 @@ const connectDb = require('./config/database');
 const User = require('./models/user');
 app.use(express.json());
 
+const bcrypt = require('bcrypt');
 const sanitizeUserInput = require('./middlewares/sanitize');
 const sanitizeUpdateInput = require('./middlewares/sanitizeUpdateInput');
 
 // Create new user
 app.post('/signup', sanitizeUserInput, async (req, res) => {
     try {
+        // Encrypt the password 
+        const { password, ...rest } = req.body;
+        const passwordHash = await bcrypt.hash(password, 10);
+        console.log(passwordHash);
+
+        const userData = { ...rest, password: passwordHash };
         // creating new istance of the User Model (class)
-        const user = new User(req.body);
-        console.log("Req Body", req.body);
+        const user = new User(userData);
+        console.log("Req Body", userData);
         // save user in DB
         await user.save();
 
@@ -28,7 +35,7 @@ app.post('/signup', sanitizeUserInput, async (req, res) => {
 
         // Duplicate Email Error (MongoDB Code)
         if (err.code === 11000) {
-            res.status(409).json({
+            return res.status(409).json({
                 success: false,
                 message: "User with this email already exist"
             });
@@ -36,14 +43,14 @@ app.post('/signup', sanitizeUserInput, async (req, res) => {
 
         // Validation error
         if (err.name === "ValidationError") {
-            res.status(400).json({
+            return res.status(400).json({
                 success: false,
                 message: err.message
             });
         }
 
         // Fallback for unknown errors
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
             message: "Something went wrong on the server"
         });

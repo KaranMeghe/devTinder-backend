@@ -33,8 +33,18 @@ const userSchema = new mongoose.Schema({
         required: true,
         trim: true,
         minLength: 8,
-        maxLength: 16,
-        select: false
+        select: false,
+        validate(value) {
+            if (!validator.isStrongPassword(value, {
+                minLength: 8,
+                minLowercase: 1,
+                minUppercase: 1,
+                minNumbers: 1,
+                minSymbols: 1
+            })) {
+                throw new Error("Password must contain 8+ chars, including uppercase, lowercase, and number");
+            }
+        }
     },
     photoUrl: {
         type: String,
